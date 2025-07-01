@@ -1,6 +1,5 @@
 import ProjectsBoard from "@/components/board/projects-board";
 import { ProjectsBoardProvider } from "@/context/projects-board-context";
-import Image from "next/image";
 
 export default function Home() {
   return (
