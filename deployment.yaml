@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: projects-board-deployment
+  labels:
+    app: projects-board
+spec:
+  replicas: 2 # Number of pods
+  selector:
+    matchLabels:
+      app: projects-board
+  template:
+    metadata:
+      labels:
+        app: projects-board
+    spec:
+      containers:
+      - name: projects-board
+        image: jaganraajan/projects-board:latest # Replace with your Docker image
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
