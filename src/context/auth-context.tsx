@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     // Simulate login (replace with real API call)
     // On success, fetch company name
-    console.log(password);
+    console.log(password); 
     try {
       // Here you would POST to /login and get a token. For now, just fetch /me.
       const res = await fetch(
@@ -42,12 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (email: string, password: string, company_name: string) => {
     try {
-      const res = await fetch(
+        const res = await fetch(
         `${process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL}/register`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, company_name }),
+          body: JSON.stringify({
+            user: {
+              email,
+              password,
+              company_name,
+            },
+          }),
         }
       );
       return res.ok;
