@@ -3,6 +3,23 @@
 import { useRouter } from "next/navigation";
 import ProjectsBoard from "@/components/board/projects-board";
 import { ProjectsBoardProvider } from "@/context/projects-board-context";
+import { useAuth } from "@/context/auth-context";
+
+function BoardLink() {
+  const { user } = useAuth();
+  if (!user?.company_name) return null;
+  // Sanitize company name for subdomain: lowercase, remove spaces, etc.
+  const sub = user.company_name.trim().toLowerCase().replace(/\s+/g, '-');
+  const url = `https://${sub}.projects-board-zeta.vercel.app`;
+  return (
+    <div className="my-4 border p-3 rounded bg-gray-50 dark:bg-gray-900">
+      <span className="font-semibold">Your Board URL: </span>
+      <a href={url} className="text-blue-700 underline break-all" target="_blank" rel="noopener noreferrer">
+        {url}
+      </a>
+    </div>
+  );
+}
 
 export default function Home() {
   const router = useRouter();
@@ -30,7 +47,7 @@ export default function Home() {
             </button>
           </div>
         </header>
-        
+        <BoardLink />
         <ProjectsBoardProvider>
           <ProjectsBoard />
         </ProjectsBoardProvider>

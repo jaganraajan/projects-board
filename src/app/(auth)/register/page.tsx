@@ -1,22 +1,32 @@
 'use client';
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [companyName, setCompanyName] = useState("");
 
-  const handleRegister = (event: React.FormEvent) => {
+  const handleRegister = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Simulate registration logic (e.g., API call)
-    const email = (event.target as HTMLFormElement).email.value;
-    const password = (event.target as HTMLFormElement).password.value;
+    const form = event.target as HTMLFormElement;
+    const email = form.email.value;
+    const password = form.password.value;
+    const company_name = form.company_name.value;
 
-    if (email && password) {
-      console.log("User registered:", { email, password });
-
-      // Redirect to login page after successful registration
-      router.push("/login");
+    if (email && password && company_name) {
+      setLoading(true);
+      const ok = await register(email, password, company_name);
+      setLoading(false);
+      if (ok) {
+        router.push("/login");
+      } else {
+        alert("Registration failed.");
+      }
     } else {
       alert("Please fill out all fields.");
     }
@@ -33,6 +43,17 @@ export default function RegisterPage() {
         onSubmit={handleRegister}
         className="w-80 bg-white dark:bg-gray-700 p-6 rounded shadow-md"
       >
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Company Name</label>
+          <input
+            type="text"
+            name="company_name"
+            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Your company name"
+            value={companyName}
+            onChange={e => setCompanyName(e.target.value)}
+          />
+        </div>
         <div className="mb-4">
           <label className="block text-sm font-medium mb-2">Email</label>
           <input
@@ -54,8 +75,9 @@ export default function RegisterPage() {
         <button
           type="submit"
           className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          disabled={loading}
         >
-          Register
+          {loading ? "Registering..." : "Register"}
         </button>
         <button
           type="button"
