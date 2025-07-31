@@ -1,13 +1,8 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FilterBar } from "./filter-bar";
-
-type Task = {
-  id: string;
-  title: string;
-  description: string;
-};
+import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
 
 type ColumnProps = {
   title: string;
@@ -16,9 +11,10 @@ type ColumnProps = {
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, column: string) => void;
   addTask: () => void;
+  isLoading: boolean;
 };
 
-const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, onDrop, addTask}) => {
+const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, onDrop, addTask, isLoading}) => {
   return (
     <div
       className="p-4 border rounded bg-gray-200 dark:bg-gray-800"
@@ -40,9 +36,10 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
       ))}
       <button
         onClick={addTask}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        disabled={isLoading}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
       >
-        Add Task
+        {isLoading ? "Adding..." : "Add Task"}
       </button>
     </div>
   );
@@ -50,23 +47,74 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
 
 export default function ProjectsBoard() {
   const [tasks, setTasks] = useState({
-    todo: [
-      { id: "1", title: "Task 1", description: "Description for Task 1" },
-      { id: "2", title: "Task 2", description: "Description for Task 2" },
-    ],
-    inProgress: [],
-    done: [],
+    todo: [] as Task[],
+    inProgress: [] as Task[],
+    done: [] as Task[],
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const addTask = (column: "todo" | "inProgress" | "done") => {
+  // Load tasks from API on component mount
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        setIsLoading(true);
+        const allTasks = await fetchTasks();
+        
+        // Group tasks by status
+        const groupedTasks = {
+          todo: allTasks.filter(task => task.status === 'todo'),
+          inProgress: allTasks.filter(task => task.status === 'inProgress'),
+          done: allTasks.filter(task => task.status === 'done'),
+        };
+        
+        setTasks(groupedTasks);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load tasks:', err);
+        setError('Failed to load tasks. Please try again.');
+        // Fall back to initial tasks for demo purposes
+        setTasks({
+          todo: [
+            { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
+            { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
+          ],
+          inProgress: [],
+          done: [],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTasks();
+  }, []);
+
+  const addTask = async (column: TaskStatus) => {
     const title = prompt("Enter task title:");
     const description = prompt("Enter task description:");
     if (title && description) {
-      const newTask = { id: Date.now().toString(), title, description };
-      setTasks((prev) => ({
-        ...prev,
-        [column]: [...prev[column], newTask],
-      }));
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const newTask = await createTask({
+          title,
+          description,
+          status: column,
+        });
+        
+        // Update local state only after successful API response
+        setTasks((prev) => ({
+          ...prev,
+          [column]: [...prev[column], newTask],
+        }));
+      } catch (err) {
+        console.error('Failed to create task:', err);
+        setError('Failed to create task. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -81,7 +129,7 @@ export default function ProjectsBoard() {
     event.preventDefault(); // Allow drop
   };
 
-  const onDrop = (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => {
+  const onDrop = async (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => {
     const taskId = event.dataTransfer.getData("taskId");
     const sourceColumn = event.dataTransfer.getData("sourceColumn");
     console.log('in onDrop', { taskId, sourceColumn, targetColumn });
@@ -91,29 +139,50 @@ export default function ProjectsBoard() {
     // If the source and target columns are the same, do nothing
     if (sourceColumn === targetColumn) return;
 
-    setTasks((prev) => {
-      const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
-      const targetTasks = [...prev[targetColumn as keyof typeof tasks]];
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Update task status via API
+      await updateTask(taskId, { status: targetColumn as TaskStatus });
+      
+      // Update local state only after successful API response
+      setTasks((prev) => {
+        const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
+        const targetTasks = [...prev[targetColumn as keyof typeof tasks]];
 
-      const taskIndex = sourceTasks.findIndex((task) => task.id === taskId);
-      const [movedTask] = sourceTasks.splice(taskIndex, 1);
+        const taskIndex = sourceTasks.findIndex((task) => task.id === taskId);
+        const [movedTask] = sourceTasks.splice(taskIndex, 1);
+        
+        // Update the task's status
+        movedTask.status = targetColumn as TaskStatus;
+        targetTasks.push(movedTask);
 
-      targetTasks.push(movedTask);
-
-      const updatedTasks = {
-        ...prev,
-        [sourceColumn]: sourceTasks,
-        [targetColumn]: targetTasks,
-      };
-    
-      console.log("Updated tasks:", updatedTasks); // Debugging
-      return updatedTasks;
-    });
+        const updatedTasks = {
+          ...prev,
+          [sourceColumn]: sourceTasks,
+          [targetColumn]: targetTasks,
+        };
+      
+        console.log("Updated tasks:", updatedTasks); // Debugging
+        return updatedTasks;
+      });
+    } catch (err) {
+      console.error('Failed to move task:', err);
+      setError('Failed to move task. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
-      <FilterBar /><div className="grid grid-cols-3 gap-4"></div>
+      <FilterBar />
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-4">
         <Column
           title="todo"
@@ -122,7 +191,7 @@ export default function ProjectsBoard() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           addTask={() => addTask("todo")}
-          data-column="todo"
+          isLoading={isLoading}
         />
         <Column
           title="inProgress"
@@ -131,7 +200,7 @@ export default function ProjectsBoard() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           addTask={() => addTask("inProgress")}
-          data-column="inProgress"
+          isLoading={isLoading}
         />
         <Column
           title="done"
@@ -140,7 +209,7 @@ export default function ProjectsBoard() {
           onDragOver={onDragOver}
           onDrop={onDrop}
           addTask={() => addTask("done")}
-          data-column="done"
+          isLoading={isLoading}
         />
       </div>
     </>
