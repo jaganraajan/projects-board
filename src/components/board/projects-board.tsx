@@ -148,7 +148,8 @@ export default function ProjectsBoard() {
       setError(null);
       
       // Update task status via API
-      await updateTask(taskId, { status: targetColumn as TaskStatus });
+      await updateTask(taskId, { status: targetColumn as TaskStatus }, token || '', user?.email || "");
+      console.log("Task moved successfully:", { taskId, sourceColumn, targetColumn });
       
       // Update local state only after successful API response
       setTasks((prev) => {
