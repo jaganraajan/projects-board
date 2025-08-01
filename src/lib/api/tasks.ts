@@ -1,3 +1,5 @@
+import { useAuth } from "@/context/auth-context";
+
 export type TaskStatus = 'todo' | 'inProgress' | 'done';
 
 export type Task = {
@@ -23,6 +25,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL || 'http://lo
  * Create a new task via API
  */
 export async function createTask(taskData: CreateTaskRequest): Promise<Task> {
+  const { token } = useAuth(); // Get the token from the Auth context
+  
   if (!API_BASE_URL) {
     throw new Error('API URL not configured');
   }
@@ -31,8 +35,8 @@ export async function createTask(taskData: CreateTaskRequest): Promise<Task> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, // Include the JWT token
     },
-    credentials: 'include', // Include cookies for authentication
     body: JSON.stringify({
       task: taskData
     }),

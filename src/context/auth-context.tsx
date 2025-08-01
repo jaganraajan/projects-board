@@ -4,6 +4,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode } from
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
+  token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
@@ -13,29 +14,33 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<{ email: string; company_name: string } | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Optionally, fetch session on mount
     // e.g., check localStorage/token
   }, []);
 
-  const login = async (email: string, password: string) => {
-    // Simulate login (replace with real API call)
-    // On success, fetch company name
-    console.log(password); 
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Here you would POST to /login and get a token. For now, just fetch /me.
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL}/me?email=${encodeURIComponent(email)}`,
-        { credentials: "include" }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
       if (res.ok) {
         const data = await res.json();
         setUser({ email: data.email, company_name: data.company_name });
+        setToken(data.token); // Save the JWT token
         return true;
       }
+
       return false;
-    } catch {
+    } catch (error) {
+      console.error("Login failed:", error);
       return false;
     }
   };
@@ -62,10 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    setUser(null);
+    setToken(null); // Clear the token on logout
+  };
+
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, token, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
