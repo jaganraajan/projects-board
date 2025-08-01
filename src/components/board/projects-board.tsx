@@ -47,7 +47,7 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
 };
 
 export default function ProjectsBoard() {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const [tasks, setTasks] = useState({
     todo: [] as Task[],
     inProgress: [] as Task[],
@@ -61,7 +61,7 @@ export default function ProjectsBoard() {
     const loadTasks = async () => {
       try {
         setIsLoading(true);
-        const allTasks = await fetchTasks();
+        const allTasks = await fetchTasks(token || "", user?.email || "");
         
         // Group tasks by status
         const groupedTasks = {
@@ -106,7 +106,7 @@ export default function ProjectsBoard() {
           status: column,
         };
 
-        const newTask = await createTask(taskData, token || "");
+        const newTask = await createTask(taskData, token || "", user?.email || "");
         console.log("Task created:", newTask);
         // Update local state only after successful API response
         setTasks((prev) => ({

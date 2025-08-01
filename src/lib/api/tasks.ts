@@ -22,7 +22,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL || 'http://lo
 /**
  * Create a new task via API
  */
-export async function createTask(taskData: CreateTaskRequest, token: string): Promise<Task> {
+export async function createTask(taskData: CreateTaskRequest, token: string, email: string): Promise<Task> {
   if (!API_BASE_URL) {
     throw new Error('API URL not configured');
   }
@@ -32,6 +32,7 @@ export async function createTask(taskData: CreateTaskRequest, token: string): Pr
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`, // Include the JWT token
+      'X-User-Email': email, // Include the user's email
     },
     body: JSON.stringify({
       task: taskData
@@ -74,7 +75,7 @@ export async function updateTask(taskId: string, updates: UpdateTaskRequest): Pr
 /**
  * Fetch all tasks for the current user
  */
-export async function fetchTasks(): Promise<Task[]> {
+export async function fetchTasks(token: string, email: string): Promise<Task[]> {
   if (!API_BASE_URL) {
     throw new Error('API URL not configured');
   }
@@ -83,8 +84,9 @@ export async function fetchTasks(): Promise<Task[]> {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, // Include the JWT token
+      'X-User-Email': email, // Include the user's email
     },
-    credentials: 'include', // Include cookies for authentication
   });
 
   if (!response.ok) {
