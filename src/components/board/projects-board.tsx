@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from "@/context/auth-context";
 import React, { useState, useEffect } from "react";
 import { FilterBar } from "./filter-bar";
 import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
@@ -46,6 +47,7 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
 };
 
 export default function ProjectsBoard() {
+  const { token } = useAuth();
   const [tasks, setTasks] = useState({
     todo: [] as Task[],
     inProgress: [] as Task[],
@@ -98,12 +100,14 @@ export default function ProjectsBoard() {
         setIsLoading(true);
         setError(null);
         
-        const newTask = await createTask({
+        const taskData = {
           title,
           description,
           status: column,
-        });
-        
+        };
+
+        const newTask = await createTask(taskData, token || "");
+        console.log("Task created:", newTask);
         // Update local state only after successful API response
         setTasks((prev) => ({
           ...prev,
