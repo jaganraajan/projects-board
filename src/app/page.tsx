@@ -23,6 +23,7 @@ function BoardLink() {
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuth();
 
   const navigateToLogin = () => {
     router.push("/login"); // Navigate to the login page
@@ -37,7 +38,19 @@ export default function Home() {
       <div className="container mx-auto py-4">
         {/* Header with Login and Register Buttons */}
         <header className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Project Management Board 2</h1>
+        <h1 className="text-2xl font-bold">
+            Project Management Board
+            {user?.company_name && (
+              <a
+                href={`https://${user.company_name.trim().toLowerCase().replace(/\s+/g, '-')}.projects-board-zeta.vercel.app`}
+                className="text-blue-500 underline ml-2"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ({user.company_name})
+              </a>
+            )}
+          </h1>
           <div className="flex gap-4">
             <button onClick={navigateToLogin} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
               Login

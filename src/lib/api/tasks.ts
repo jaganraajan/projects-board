@@ -1,4 +1,4 @@
-export type TaskStatus = 'todo' | 'inProgress' | 'done';
+export type TaskStatus = 'todo' | 'in_progress' | 'done';
 
 export type Task = {
   id: string;
@@ -49,10 +49,14 @@ export async function createTask(taskData: CreateTaskRequest, token: string, ema
 /**
  * Update a task's status via API
  */
-export async function updateTask(taskId: string, updates: UpdateTaskRequest, token: string, email: string): Promise<Task> {
+export async function updateTask(taskId: string, updates: { title: string; description: string; status: TaskStatus }, token: string, email: string): Promise<Task> {
   if (!API_BASE_URL) {
     throw new Error('API URL not configured');
   }
+  
+
+  console.log("Updates object:", updates);
+  console.log("token:", token);
   
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
     method: 'PATCH',

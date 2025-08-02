@@ -50,7 +50,7 @@ export default function ProjectsBoard() {
   const { user, token } = useAuth();
   const [tasks, setTasks] = useState({
     todo: [] as Task[],
-    inProgress: [] as Task[],
+    in_progress: [] as Task[],
     done: [] as Task[],
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +66,7 @@ export default function ProjectsBoard() {
         // Group tasks by status
         const groupedTasks = {
           todo: allTasks.filter(task => task.status === 'todo'),
-          inProgress: allTasks.filter(task => task.status === 'inProgress'),
+          in_progress: allTasks.filter(task => task.status === 'in_progress'),
           done: allTasks.filter(task => task.status === 'done'),
         };
         
@@ -81,7 +81,7 @@ export default function ProjectsBoard() {
             { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
             { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
           ],
-          inProgress: [],
+          in_progress: [],
           done: [],
         });
       } finally {
@@ -146,11 +146,28 @@ export default function ProjectsBoard() {
     try {
       setIsLoading(true);
       setError(null);
-      
+
+      // const taskIdNumber = Number(taskId);// Debugging
+      const taskIdNumber = Number(taskId); 
+      const task = tasks[sourceColumn as keyof typeof tasks].find((t) => Number(t.id) === taskIdNumber);
+
+      if (!task) {
+        console.error(`Task with ID ${taskId} not found`);
+        return;
+      }
       // Update task status via API
-      await updateTask(taskId, { status: targetColumn as TaskStatus }, token || '', user?.email || "");
+      await updateTask(
+        taskId,
+        {
+          title: task.title, // Pass the title
+          description: task.description, // Pass the description
+          status: targetColumn as TaskStatus, // Pass the updated column status
+        },
+        token || '',
+        user?.email || ''
+      );
       console.log("Task moved successfully:", { taskId, sourceColumn, targetColumn });
-      
+            
       // Update local state only after successful API response
       setTasks((prev) => {
         const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
@@ -199,12 +216,12 @@ export default function ProjectsBoard() {
           isLoading={isLoading}
         />
         <Column
-          title="inProgress"
-          tasks={tasks.inProgress}
+          title="in_progress"
+          tasks={tasks.in_progress}
           onDragStart={onDragStart}
           onDragOver={onDragOver}
           onDrop={onDrop}
-          addTask={() => addTask("inProgress")}
+          addTask={() => addTask("in_progress")}
           isLoading={isLoading}
         />
         <Column
