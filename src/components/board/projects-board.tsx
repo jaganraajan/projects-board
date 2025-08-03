@@ -1,9 +1,9 @@
 'use client';
 
 import { useAuth } from "@/context/auth-context";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { FilterBar } from "./filter-bar";
-import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
+import { Task } from "@/lib/api/tasks";
 
 type ColumnProps = {
   title: string;
@@ -47,155 +47,7 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
 };
 
 export default function ProjectsBoard() {
-  const { user, token } = useAuth();
-  const [tasks, setTasks] = useState({
-    todo: [] as Task[],
-    in_progress: [] as Task[],
-    done: [] as Task[],
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Load tasks from API on component mount
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        setIsLoading(true);
-        const allTasks = await fetchTasks(token || "", user?.email || "");
-        
-        // Group tasks by status
-        const groupedTasks = {
-          todo: allTasks.filter(task => task.status === 'todo'),
-          in_progress: allTasks.filter(task => task.status === 'in_progress'),
-          done: allTasks.filter(task => task.status === 'done'),
-        };
-        
-        setTasks(groupedTasks);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load tasks:', err);
-        setError('Failed to load tasks. Please try again.');
-        // Fall back to initial tasks for demo purposes
-        setTasks({
-          todo: [
-            { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
-            { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
-          ],
-          in_progress: [],
-          done: [],
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTasks();
-  }, []);
-
-  const addTask = async (column: TaskStatus) => {
-    const title = prompt("Enter task title:");
-    const description = prompt("Enter task description:");
-    if (title && description) {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const taskData = {
-          title,
-          description,
-          status: column,
-        };
-
-        const newTask = await createTask(taskData, token || "", user?.email || "");
-        console.log("Task created:", newTask);
-        // Update local state only after successful API response
-        setTasks((prev) => ({
-          ...prev,
-          [column]: [...prev[column], newTask],
-        }));
-      } catch (err) {
-        console.error('Failed to create task:', err);
-        setError('Failed to create task. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const onDragStart = (event: React.DragEvent<HTMLDivElement>, taskId: string) => {
-    const sourceColumn = event.currentTarget.closest("[data-column]")?.getAttribute("data-column");
-    console.log("Dragging task:", { taskId, sourceColumn }); // Debugging
-    event.dataTransfer.setData("taskId", taskId);
-    event.dataTransfer.setData("sourceColumn", sourceColumn || "");
-  };
-
-  const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault(); // Allow drop
-  };
-
-  const onDrop = async (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => {
-    const taskId = event.dataTransfer.getData("taskId");
-    const sourceColumn = event.dataTransfer.getData("sourceColumn");
-    console.log('in onDrop', { taskId, sourceColumn, targetColumn });
-
-    if (!taskId || !sourceColumn) return;
-
-    // If the source and target columns are the same, do nothing
-    if (sourceColumn === targetColumn) return;
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // const taskIdNumber = Number(taskId);// Debugging
-      const taskIdNumber = Number(taskId); 
-      const task = tasks[sourceColumn as keyof typeof tasks].find((t) => Number(t.id) === taskIdNumber);
-
-      if (!task) {
-        console.error(`Task with ID ${taskId} not found`);
-        return;
-      }
-      // Update task status via API
-      await updateTask(
-        taskId,
-        {
-          title: task.title, // Pass the title
-          description: task.description, // Pass the description
-          status: targetColumn as TaskStatus, // Pass the updated column status
-        },
-        token || '',
-        user?.email || ''
-      );
-      console.log("Task moved successfully:", { taskId, sourceColumn, targetColumn });
-            
-      // Update local state only after successful API response
-      setTasks((prev) => {
-        const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
-        const targetTasks = [...prev[targetColumn as keyof typeof tasks]];
-
-        const taskIndex = sourceTasks.findIndex((task) => task.id === taskId);
-        const [movedTask] = sourceTasks.splice(taskIndex, 1);
-        
-        // Update the task's status
-        movedTask.status = targetColumn as TaskStatus;
-        targetTasks.push(movedTask);
-
-        const updatedTasks = {
-          ...prev,
-          [sourceColumn]: sourceTasks,
-          [targetColumn]: targetTasks,
-        };
-      
-        console.log("Updated tasks:", updatedTasks); // Debugging
-        return updatedTasks;
-      });
-    } catch (err) {
-      console.error('Failed to move task:', err);
-      setError('Failed to move task. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { tasks, addTask, onDragStart, onDragOver, onDrop, isLoading, error } = useAuth();
 
   return (
     <>

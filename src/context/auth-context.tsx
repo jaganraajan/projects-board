@@ -1,13 +1,30 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
+import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
   token: string | null;
+  tasks: {
+    todo: Task[];
+    in_progress: Task[];
+    done: Task[];
+  };
+  setTasks: React.Dispatch<React.SetStateAction<{
+    todo: Task[];
+    in_progress: Task[];
+    done: Task[];
+  }>>;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
+  addTask: (column: TaskStatus) => Promise<void>;
+  onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
+  onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop: (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,6 +32,45 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<{ email: string; company_name: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [tasks, setTasks] = useState({
+    todo: [] as Task[],
+    in_progress: [] as Task[],
+    done: [] as Task[],
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load tasks from API when user and token are available
+  const loadTasks = async (userToken: string, userEmail: string) => {
+    try {
+      setIsLoading(true);
+      const allTasks = await fetchTasks(userToken, userEmail);
+      
+      // Group tasks by status
+      const groupedTasks = {
+        todo: allTasks.filter(task => task.status === 'todo'),
+        in_progress: allTasks.filter(task => task.status === 'in_progress'),
+        done: allTasks.filter(task => task.status === 'done'),
+      };
+      
+      setTasks(groupedTasks);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load tasks:', err);
+      setError('Failed to load tasks. Please try again.');
+      // Fall back to initial tasks for demo purposes
+      setTasks({
+        todo: [
+          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
+          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
+        ],
+        in_progress: [],
+        done: [],
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -35,7 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (res.ok) {
             const data = await res.json();
-            setUser({ email: data.email, company_name: data.company_name });
+            const userData = { email: data.email, company_name: data.company_name };
+            setUser(userData);
+            // Load tasks after setting user
+            await loadTasks(storedToken, data.email);
           } else {
             console.error("Failed to fetch user details:", res.statusText);
             logout(); // Clear token if fetching user fails
@@ -62,9 +121,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (res.ok) {
         const data = await res.json();
-        setUser({ email: data.email, company_name: data.company_name });
+        const userData = { email: data.email, company_name: data.company_name };
+        setUser(userData);
         localStorage.setItem('token', data.token); // Store token for persistence
         setToken(data.token); // Save the JWT token
+        // Load tasks after successful login
+        await loadTasks(data.token, data.email);
         return true;
       }
 
@@ -100,11 +162,136 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null); // Clear the token on logout
+    localStorage.removeItem("token"); // Remove token from localStorage
+    setTasks({
+      todo: [],
+      in_progress: [],
+      done: [],
+    }); // Clear tasks on logout
+    setError(null);
+  };
+
+  const addTask = async (column: TaskStatus) => {
+    const title = prompt("Enter task title:");
+    const description = prompt("Enter task description:");
+    if (title && description && user && token) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const taskData = {
+          title,
+          description,
+          status: column,
+        };
+
+        const newTask = await createTask(taskData, token, user.email);
+        console.log("Task created:", newTask);
+        // Update local state only after successful API response
+        setTasks((prev) => ({
+          ...prev,
+          [column]: [...prev[column], newTask],
+        }));
+      } catch (err) {
+        console.error('Failed to create task:', err);
+        setError('Failed to create task. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const onDragStart = (event: React.DragEvent<HTMLDivElement>, taskId: string) => {
+    const sourceColumn = event.currentTarget.closest("[data-column]")?.getAttribute("data-column");
+    console.log("Dragging task:", { taskId, sourceColumn }); // Debugging
+    event.dataTransfer.setData("taskId", taskId);
+    event.dataTransfer.setData("sourceColumn", sourceColumn || "");
+  };
+
+  const onDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault(); // Allow drop
+  };
+
+  const onDrop = async (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => {
+    const taskId = event.dataTransfer.getData("taskId");
+    const sourceColumn = event.dataTransfer.getData("sourceColumn");
+    console.log('in onDrop', { taskId, sourceColumn, targetColumn });
+
+    if (!taskId || !sourceColumn || !user || !token) return;
+
+    // If the source and target columns are the same, do nothing
+    if (sourceColumn === targetColumn) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const taskIdNumber = Number(taskId); 
+      const task = tasks[sourceColumn as keyof typeof tasks].find((t) => Number(t.id) === taskIdNumber);
+
+      if (!task) {
+        console.error(`Task with ID ${taskId} not found`);
+        return;
+      }
+      // Update task status via API
+      await updateTask(
+        taskId,
+        {
+          title: task.title, // Pass the title
+          description: task.description, // Pass the description
+          status: targetColumn as TaskStatus, // Pass the updated column status
+        },
+        token,
+        user.email
+      );
+      console.log("Task moved successfully:", { taskId, sourceColumn, targetColumn });
+            
+      // Update local state only after successful API response
+      setTasks((prev) => {
+        const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
+        const targetTasks = [...prev[targetColumn as keyof typeof tasks]];
+
+        const taskIndex = sourceTasks.findIndex((task) => task.id === taskId);
+        const [movedTask] = sourceTasks.splice(taskIndex, 1);
+        
+        // Update the task's status
+        movedTask.status = targetColumn as TaskStatus;
+        targetTasks.push(movedTask);
+
+        const updatedTasks = {
+          ...prev,
+          [sourceColumn]: sourceTasks,
+          [targetColumn]: targetTasks,
+        };
+      
+        console.log("Updated tasks:", updatedTasks); // Debugging
+        return updatedTasks;
+      });
+    } catch (err) {
+      console.error('Failed to move task:', err);
+      setError('Failed to move task. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, register }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      tasks, 
+      setTasks, 
+      login, 
+      logout, 
+      register, 
+      addTask, 
+      onDragStart, 
+      onDragOver, 
+      onDrop, 
+      isLoading, 
+      error 
+    }}>
       {children}
     </AuthContext.Provider>
   );
