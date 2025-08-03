@@ -17,8 +17,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Optionally, fetch session on mount
-    // e.g., check localStorage/token
+    const storedToken = localStorage.getItem("token");
+
+    if (storedToken) {
+        console.log("Token found in localStorage:", storedToken);
+      setToken(storedToken);
+
+      // Fetch user details using the token
+      const fetchUser = async () => {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL}/me`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${storedToken}`,
+            },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            setUser({ email: data.email, company_name: data.company_name });
+          } else {
+            console.error("Failed to fetch user details:", res.statusText);
+            logout(); // Clear token if fetching user fails
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+          logout(); // Clear token if an error occurs
+        }
+      };
+
+      fetchUser();
+    }
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -34,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser({ email: data.email, company_name: data.company_name });
+        localStorage.setItem('token', data.token); // Store token for persistence
         setToken(data.token); // Save the JWT token
         return true;
       }
