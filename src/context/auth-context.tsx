@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
+import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask } from "@/lib/api/tasks";
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
@@ -20,6 +20,8 @@ type AuthContextType = {
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
   addTask: (column: TaskStatus) => Promise<void>;
+  editTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => Promise<void>;
@@ -61,8 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fall back to initial tasks for demo purposes
       setTasks({
         todo: [
-          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
-          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
+          { 
+            id: "1", 
+            title: "Task 1", 
+            description: "Description for Task 1", 
+            status: "todo",
+            tags: ["urgent", "frontend"],
+            due_date: "2024-01-15"
+          },
+          { 
+            id: "2", 
+            title: "Task 2", 
+            description: "Description for Task 2", 
+            status: "todo",
+            tags: ["backend"],
+            due_date: "2024-01-20"
+          },
         ],
         in_progress: [],
         done: [],
@@ -106,6 +122,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       fetchUser();
+    } else {
+      // No token found, load demo tasks for testing
+      console.log("No token found, loading demo tasks");
+      setTasks({
+        todo: [
+          { 
+            id: "1", 
+            title: "Design new homepage", 
+            description: "Create a modern and responsive homepage design with hero section and navigation", 
+            status: "todo",
+            tags: ["urgent", "design", "frontend"],
+            due_date: "2024-01-15"
+          },
+          { 
+            id: "2", 
+            title: "API Integration", 
+            description: "Integrate with the new backend API endpoints", 
+            status: "todo",
+            tags: ["backend", "api"],
+            due_date: "2024-01-20"
+          },
+        ],
+        in_progress: [
+          { 
+            id: "3", 
+            title: "User Authentication", 
+            description: "Implement user login and registration", 
+            status: "in_progress",
+            tags: ["security", "backend"],
+            due_date: "2024-01-18"
+          },
+        ],
+        done: [
+          { 
+            id: "4", 
+            title: "Project Setup", 
+            description: "Set up the initial project structure", 
+            status: "done",
+            tags: ["setup"],
+            due_date: "2024-01-10"
+          },
+        ],
+      });
     }
   }, []);
 
@@ -174,6 +233,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const addTask = async (column: TaskStatus) => {
     const title = prompt("Enter task title:");
     const description = prompt("Enter task description:");
+    const tagsInput = prompt("Enter tags (comma-separated, optional):");
+    const dueDateInput = prompt("Enter due date (YYYY-MM-DD, optional):");
+    
     if (title && description && user && token) {
       try {
         setIsLoading(true);
@@ -183,6 +245,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title,
           description,
           status: column,
+          tags: tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : undefined,
+          due_date: dueDateInput && dueDateInput.match(/^\d{4}-\d{2}-\d{2}$/) ? dueDateInput : undefined,
         };
 
         const newTask = await createTask(taskData, token, user.email);
@@ -198,6 +262,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         setIsLoading(false);
       }
+    }
+  };
+
+  const editTask = async (taskId: string, updates: Partial<Task>) => {
+    if (!user || !token) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedTask = await updateTask(taskId, updates, token, user.email);
+      console.log("Task updated:", updatedTask);
+      
+      // Update local state
+      setTasks((prev) => {
+        const newTasks = { ...prev };
+        
+        // Find the task in all columns and update it
+        Object.keys(newTasks).forEach((column) => {
+          const columnKey = column as keyof typeof newTasks;
+          const taskIndex = newTasks[columnKey].findIndex((task) => task.id === taskId);
+          if (taskIndex !== -1) {
+            newTasks[columnKey][taskIndex] = updatedTask;
+          }
+        });
+        
+        return newTasks;
+      });
+    } catch (err) {
+      console.error('Failed to update task:', err);
+      setError('Failed to update task. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteTaskHandler = async (taskId: string) => {
+    if (!user || !token) return;
+    
+    if (!confirm('Are you sure you want to delete this task?')) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      await deleteTask(taskId, token, user.email);
+      console.log("Task deleted:", taskId);
+      
+      // Update local state
+      setTasks((prev) => {
+        const newTasks = { ...prev };
+        
+        // Remove the task from all columns
+        Object.keys(newTasks).forEach((column) => {
+          const columnKey = column as keyof typeof newTasks;
+          newTasks[columnKey] = newTasks[columnKey].filter((task) => task.id !== taskId);
+        });
+        
+        return newTasks;
+      });
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      setError('Failed to delete task. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -237,9 +366,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await updateTask(
         taskId,
         {
-          title: task.title, // Pass the title
-          description: task.description, // Pass the description
-          status: targetColumn as TaskStatus, // Pass the updated column status
+          status: targetColumn as TaskStatus, // Only update the status for drag and drop
         },
         token,
         user.email
@@ -286,6 +413,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout, 
       register, 
       addTask, 
+      editTask,
+      deleteTask: deleteTaskHandler,
       onDragStart, 
       onDragOver, 
       onDrop, 
