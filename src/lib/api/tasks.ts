@@ -5,16 +5,24 @@ export type Task = {
   title: string;
   description: string;
   status: TaskStatus;
+  tags?: string[];
+  due_date?: string;
 };
 
 export type CreateTaskRequest = {
   title: string;
   description: string;
   status: TaskStatus;
+  tags?: string[];
+  due_date?: string;
 };
 
 export type UpdateTaskRequest = {
-  status: TaskStatus;
+  title?: string;
+  description?: string;
+  status?: TaskStatus;
+  tags?: string[];
+  due_date?: string;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL || 'http://localhost:3001';
@@ -47,9 +55,9 @@ export async function createTask(taskData: CreateTaskRequest, token: string, ema
 }
 
 /**
- * Update a task's status via API
+ * Update a task via API
  */
-export async function updateTask(taskId: string, updates: { title: string; description: string; status: TaskStatus }, token: string, email: string): Promise<Task> {
+export async function updateTask(taskId: string, updates: UpdateTaskRequest, token: string, email: string): Promise<Task> {
   if (!API_BASE_URL) {
     throw new Error('API URL not configured');
   }
@@ -75,6 +83,28 @@ export async function updateTask(taskId: string, updates: { title: string; descr
   }
 
   return response.json();
+}
+
+/**
+ * Delete a task via API
+ */
+export async function deleteTask(taskId: string, token: string, email: string): Promise<void> {
+  if (!API_BASE_URL) {
+    throw new Error('API URL not configured');
+  }
+  
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`, // Include the JWT token
+      'X-User-Email': email, // Include the user's email
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to delete task: ${response.status} ${response.statusText}`);
+  }
 }
 
 /**
