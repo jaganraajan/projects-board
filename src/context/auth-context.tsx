@@ -20,6 +20,7 @@ type AuthContextType = {
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
   addTask: (column: TaskStatus) => Promise<void>;
+  addTaskWithData: (column: TaskStatus, title: string, description: string) => Promise<void>;
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => Promise<void>;
@@ -201,6 +202,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addTaskWithData = async (column: TaskStatus, title: string, description: string) => {
+    if (title && description && user && token) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const taskData = {
+          title,
+          description,
+          status: column,
+        };
+
+        const newTask = await createTask(taskData, token, user.email);
+        console.log("Task created:", newTask);
+        // Update local state only after successful API response
+        setTasks((prev) => ({
+          ...prev,
+          [column]: [...prev[column], newTask],
+        }));
+      } catch (err) {
+        console.error('Failed to create task:', err);
+        setError('Failed to create task. Please try again.');
+        throw err; // Re-throw so the component can handle it
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const onDragStart = (event: React.DragEvent<HTMLDivElement>, taskId: string) => {
     const sourceColumn = event.currentTarget.closest("[data-column]")?.getAttribute("data-column");
     console.log("Dragging task:", { taskId, sourceColumn }); // Debugging
@@ -285,7 +315,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login, 
       logout, 
       register, 
-      addTask, 
+      addTask,
+      addTaskWithData, 
       onDragStart, 
       onDragOver, 
       onDrop, 

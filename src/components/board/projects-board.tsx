@@ -11,7 +11,7 @@ type ColumnProps = {
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, column: string) => void;
-  addTask: () => void;
+  addTask: (title: string, description: string) => Promise<void>;
   isLoading: boolean;
 };
 
@@ -35,6 +35,8 @@ const getColumnColor = (title: string) => {
 
 const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, onDrop, addTask, isLoading}) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ title: '', description: '' });
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     onDragOver(event);
@@ -48,6 +50,32 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     setIsDragOver(false);
     onDrop(event, title);
+  };
+
+  const handleAddTask = () => {
+    setShowForm(true);
+  };
+
+  const handleSaveTask = async () => {
+    if (formData.title.trim() && formData.description.trim()) {
+      try {
+        await addTask(formData.title.trim(), formData.description.trim());
+        setFormData({ title: '', description: '' });
+        setShowForm(false);
+      } catch (error) {
+        // Error handling is managed by the parent component
+        console.error('Failed to save task:', error);
+      }
+    }
+  };
+
+  const handleCancelTask = () => {
+    setFormData({ title: '', description: '' });
+    setShowForm(false);
+  };
+
+  const handleFormChange = (field: 'title' | 'description', value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -122,31 +150,103 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
 
       {/* Add Task Button */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <button
-          onClick={addTask}
-          disabled={isLoading}
-          className="
-            w-full flex items-center justify-center px-4 py-2.5 
-            text-sm font-medium text-gray-700 dark:text-gray-300
-            bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
-            border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
-            rounded-lg transition-all duration-200
-            disabled:opacity-50 disabled:cursor-not-allowed
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
-          "
-        >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          {isLoading ? "Adding..." : "Add Task"}
-        </button>
+        {!showForm && (
+          <button
+            onClick={handleAddTask}
+            disabled={isLoading}
+            className="
+              w-full flex items-center justify-center px-4 py-2.5 
+              text-sm font-medium text-gray-700 dark:text-gray-300
+              bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
+              border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
+              rounded-lg transition-all duration-200
+              disabled:opacity-50 disabled:cursor-not-allowed
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+            "
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            {isLoading ? "Adding..." : "Add Task"}
+          </button>
+        )}
+
+        {/* Inline Form */}
+        {showForm && (
+          <div className="space-y-3">
+            <div>
+              <input
+                type="text"
+                placeholder="Task title..."
+                value={formData.title}
+                onChange={(e) => handleFormChange('title', e.target.value)}
+                className="
+                  w-full px-3 py-2 text-sm
+                  bg-white dark:bg-gray-800 
+                  border border-gray-300 dark:border-gray-600
+                  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-500 dark:placeholder-gray-400
+                "
+                autoFocus
+              />
+            </div>
+            <div>
+              <textarea
+                placeholder="Task description..."
+                value={formData.description}
+                onChange={(e) => handleFormChange('description', e.target.value)}
+                rows={3}
+                className="
+                  w-full px-3 py-2 text-sm resize-none
+                  bg-white dark:bg-gray-800 
+                  border border-gray-300 dark:border-gray-600
+                  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-500 dark:placeholder-gray-400
+                "
+              />
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSaveTask}
+                disabled={!formData.title.trim() || !formData.description.trim() || isLoading}
+                className="
+                  flex-1 px-3 py-2 text-sm font-medium
+                  bg-blue-600 hover:bg-blue-700 text-white
+                  border border-transparent
+                  rounded-lg transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
+                "
+              >
+                {isLoading ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={handleCancelTask}
+                disabled={isLoading}
+                className="
+                  flex-1 px-3 py-2 text-sm font-medium
+                  text-gray-700 dark:text-gray-300
+                  bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
+                  border border-gray-300 dark:border-gray-600
+                  rounded-lg transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1
+                "
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default function ProjectsBoard() {
-  const { tasks, addTask, onDragStart, onDragOver, onDrop, isLoading, error } = useAuth();
+  const { tasks, addTaskWithData, onDragStart, onDragOver, onDrop, isLoading, error } = useAuth();
 
   return (
     <div className="h-full">
@@ -172,7 +272,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={() => addTask("todo")}
+            addTask={(title, description) => addTaskWithData("todo", title, description)}
             isLoading={isLoading}
           />
           <Column
@@ -181,7 +281,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={() => addTask("in_progress")}
+            addTask={(title, description) => addTaskWithData("in_progress", title, description)}
             isLoading={isLoading}
           />
           <Column
@@ -190,7 +290,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={() => addTask("done")}
+            addTask={(title, description) => addTaskWithData("done", title, description)}
             isLoading={isLoading}
           />
         </div>
