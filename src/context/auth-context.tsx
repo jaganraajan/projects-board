@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Task, TaskStatus, createTask, updateTask, fetchTasks } from "@/lib/api/tasks";
+import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask, UpdateTaskRequest } from "@/lib/api/tasks";
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
@@ -20,7 +20,9 @@ type AuthContextType = {
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
   addTask: (column: TaskStatus) => Promise<void>;
-  addTaskWithData: (column: TaskStatus, title: string, description: string) => Promise<void>;
+  addTaskWithData: (column: TaskStatus, title: string, description: string, due_date?: string) => Promise<void>;
+  editTask: (taskId: string, updates: UpdateTaskRequest) => Promise<void>;
+  deleteTaskById: (taskId: string) => Promise<void>;
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, targetColumn: string) => Promise<void>;
@@ -62,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fall back to initial tasks for demo purposes
       setTasks({
         todo: [
-          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo" },
-          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo" },
+          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo", due_date: new Date().toISOString().split('T')[0] },
+          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo", due_date: new Date().toISOString().split('T')[0] },
         ],
         in_progress: [],
         done: [],
@@ -184,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title,
           description,
           status: column,
+          due_date: new Date().toISOString().split('T')[0], // Default to today
         };
 
         const newTask = await createTask(taskData, token, user.email);
@@ -202,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addTaskWithData = async (column: TaskStatus, title: string, description: string) => {
+  const addTaskWithData = async (column: TaskStatus, title: string, description: string, due_date?: string) => {
     if (title && description && user && token) {
       try {
         setIsLoading(true);
@@ -212,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           title,
           description,
           status: column,
+          due_date: due_date || new Date().toISOString().split('T')[0], // Default to today if not provided
         };
 
         const newTask = await createTask(taskData, token, user.email);
@@ -228,6 +232,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } finally {
         setIsLoading(false);
       }
+    }
+  };
+
+  const editTask = async (taskId: string, updates: UpdateTaskRequest) => {
+    if (!user || !token) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const updatedTask = await updateTask(taskId, updates, token, user.email);
+      console.log("Task updated:", updatedTask);
+
+      // Update local state
+      setTasks((prev) => {
+        const newTasks = { ...prev };
+        
+        // Find the task in all columns and update it
+        Object.keys(newTasks).forEach((column) => {
+          const columnKey = column as keyof typeof newTasks;
+          const taskIndex = newTasks[columnKey].findIndex(task => task.id === taskId);
+          if (taskIndex !== -1) {
+            newTasks[columnKey][taskIndex] = updatedTask;
+          }
+        });
+
+        return newTasks;
+      });
+    } catch (err) {
+      console.error('Failed to update task:', err);
+      setError('Failed to update task. Please try again.');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteTaskById = async (taskId: string) => {
+    if (!user || !token) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      await deleteTask(taskId, token, user.email);
+      console.log("Task deleted:", taskId);
+
+      // Update local state
+      setTasks((prev) => {
+        const newTasks = { ...prev };
+        
+        // Find the task in all columns and remove it
+        Object.keys(newTasks).forEach((column) => {
+          const columnKey = column as keyof typeof newTasks;
+          newTasks[columnKey] = newTasks[columnKey].filter(task => task.id !== taskId);
+        });
+
+        return newTasks;
+      });
+    } catch (err) {
+      console.error('Failed to delete task:', err);
+      setError('Failed to delete task. Please try again.');
+      throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -267,8 +336,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await updateTask(
         taskId,
         {
-          title: task.title, // Pass the title
-          description: task.description, // Pass the description
           status: targetColumn as TaskStatus, // Pass the updated column status
         },
         token,
@@ -317,6 +384,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register, 
       addTask,
       addTaskWithData, 
+      editTask,
+      deleteTaskById,
       onDragStart, 
       onDragOver, 
       onDrop, 
