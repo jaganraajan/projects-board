@@ -136,7 +136,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
   if (isEditing) {
     return (
       <div className="
-        p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600
+        p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700
         shadow-sm space-y-3
       ">
         <input
@@ -145,10 +145,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
           onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))}
           className="
             w-full px-3 py-2 text-sm font-medium
-            bg-white dark:bg-gray-600 
-            border border-gray-400 dark:border-gray-500
+            bg-white dark:bg-gray-700 
+            border border-gray-300 dark:border-gray-600
             rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            text-gray-900 dark:text-white
+            text-gray-900 dark:text-gray-100
           "
         />
         <textarea
@@ -157,10 +157,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
           rows={3}
           className="
             w-full px-3 py-2 text-sm resize-none
-            bg-white dark:bg-gray-600 
-            border border-gray-400 dark:border-gray-500
+            bg-white dark:bg-gray-700 
+            border border-gray-300 dark:border-gray-600
             rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            text-gray-900 dark:text-white
+            text-gray-900 dark:text-gray-100
           "
         />
         <input
@@ -169,10 +169,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
           onChange={(e) => setEditData(prev => ({ ...prev, due_date: e.target.value }))}
           className="
             w-full px-3 py-2 text-sm
-            bg-white dark:bg-gray-600 
-            border border-gray-400 dark:border-gray-500
+            bg-white dark:bg-gray-700 
+            border border-gray-300 dark:border-gray-600
             rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-            text-gray-900 dark:text-white
+            text-gray-900 dark:text-gray-100
           "
         />
         <div className="flex space-x-2">
@@ -195,9 +195,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
             disabled={isLoading}
             className="
               flex-1 px-3 py-2 text-sm font-medium
-              text-gray-800 dark:text-gray-200
-              bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
-              border border-gray-400 dark:border-gray-500
+              text-gray-700 dark:text-gray-300
+              bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
+              border border-gray-300 dark:border-gray-600
               rounded-lg transition-all duration-200
               disabled:opacity-50 disabled:cursor-not-allowed
               focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1
@@ -213,15 +213,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
   return (
     <div
       className="
-        group p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600
+        group p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700
         shadow-sm hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing
-        hover:border-gray-400 dark:hover:border-gray-500
+        hover:border-gray-300 dark:hover:border-gray-600
       "
       draggable
       onDragStart={(event) => onDragStart(event, task.id)}
     >
       <div className="flex items-start justify-between mb-2">
-        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-2 flex-1 mr-2">
+        <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-2 flex-1 mr-2">
           {task.title}
         </h3>
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -255,7 +255,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
           </button>
         </div>
       </div>
-      <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 mb-3">
+      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-3">
         {task.description}
       </p>
       
@@ -266,7 +266,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
         </div>
         <div className="flex items-center space-x-2">
           {task.due_date && (
-            <span className="text-xs text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">
+            <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
               {formatDate(task.due_date)}
             </span>
           )}
@@ -280,7 +280,7 @@ return (
     <div
       className={`
         flex flex-col h-fit min-h-[500px] w-80 flex-shrink-0
-        bg-white dark:bg-gray-800 rounded-xl shadow-lg border-l-4 ${getColumnColor(title)} border border-gray-300 dark:border-gray-600
+        bg-white dark:bg-gray-900 rounded-xl shadow-lg border-l-4 ${getColumnColor(title)}
         transition-all duration-200 ease-in-out
         ${isDragOver ? 'bg-blue-50 dark:bg-blue-900/20 shadow-xl' : ''}
       `}
@@ -290,12 +290,12 @@ return (
       onDrop={handleDrop}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-gray-300 dark:border-gray-600">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             {getColumnDisplayName(title)}
           </h2>
-          <span className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm px-2 py-1 rounded-full">
+          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm px-2 py-1 rounded-full">
             {tasks.length}
           </span>
         </div>
@@ -316,7 +316,7 @@ return (
 
         {/* Empty state */}
         {tasks.length === 0 && (
-          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <div className="w-12 h-12 mx-auto mb-3 opacity-50">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -328,16 +328,16 @@ return (
       </div>
 
       {/* Add Task Button */}
-      <div className="p-4 border-t border-gray-300 dark:border-gray-600">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         {!showForm && (
           <button
             onClick={handleAddTask}
             disabled={isLoading}
             className="
               w-full flex items-center justify-center px-4 py-2.5 
-              text-sm font-medium text-gray-800 dark:text-gray-200
-              bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
-              border border-gray-400 dark:border-gray-500 hover:border-gray-500 dark:hover:border-gray-400
+              text-sm font-medium text-gray-700 dark:text-gray-300
+              bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
+              border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
               rounded-lg transition-all duration-200
               disabled:opacity-50 disabled:cursor-not-allowed
               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1
@@ -361,11 +361,11 @@ return (
                 onChange={(e) => handleFormChange('title', e.target.value)}
                 className="
                   w-full px-3 py-2 text-sm
-                  bg-white dark:bg-gray-700 
-                  border border-gray-400 dark:border-gray-500
+                  bg-white dark:bg-gray-800 
+                  border border-gray-300 dark:border-gray-600
                   rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  text-gray-900 dark:text-white
-                  placeholder-gray-600 dark:placeholder-gray-300
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-500 dark:placeholder-gray-400
                 "
                 autoFocus
               />
@@ -378,11 +378,11 @@ return (
                 rows={3}
                 className="
                   w-full px-3 py-2 text-sm resize-none
-                  bg-white dark:bg-gray-700 
-                  border border-gray-400 dark:border-gray-500
+                  bg-white dark:bg-gray-800 
+                  border border-gray-300 dark:border-gray-600
                   rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  text-gray-900 dark:text-white
-                  placeholder-gray-600 dark:placeholder-gray-300
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-500 dark:placeholder-gray-400
                 "
               />
             </div>
@@ -393,10 +393,10 @@ return (
                 onChange={(e) => handleFormChange('due_date', e.target.value)}
                 className="
                   w-full px-3 py-2 text-sm
-                  bg-white dark:bg-gray-700 
-                  border border-gray-400 dark:border-gray-500
+                  bg-white dark:bg-gray-800 
+                  border border-gray-300 dark:border-gray-600
                   rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  text-gray-900 dark:text-white
+                  text-gray-900 dark:text-gray-100
                 "
               />
             </div>
@@ -420,9 +420,9 @@ return (
                 disabled={isLoading}
                 className="
                   flex-1 px-3 py-2 text-sm font-medium
-                  text-gray-800 dark:text-gray-200
-                  bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
-                  border border-gray-400 dark:border-gray-500
+                  text-gray-700 dark:text-gray-300
+                  bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700
+                  border border-gray-300 dark:border-gray-600
                   rounded-lg transition-all duration-200
                   disabled:opacity-50 disabled:cursor-not-allowed
                   focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1
@@ -457,7 +457,7 @@ export default function ProjectsBoard() {
       )}
 
       {/* Kanban Board Container */}
-      <div className="bg-gray-100 dark:bg-gray-950 rounded-xl p-6 min-h-[600px] border border-gray-200 dark:border-gray-800">
+      <div className="bg-gray-50 dark:bg-gray-950 rounded-xl p-6 min-h-[600px]">
         <div className="flex gap-6 overflow-x-auto pb-4">
           <Column
             title="todo"
