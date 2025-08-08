@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/auth-context";
 import React, { useState } from "react";
 import { ProjectDetailsBar } from "./project-details-bar";
-import { Task, UpdateTaskRequest } from "@/lib/api/tasks";
+import { Task, UpdateTaskRequest, TaskPriority } from "@/lib/api/tasks";
 
 type ColumnProps = {
   title: string;
@@ -11,7 +11,7 @@ type ColumnProps = {
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
   onDrop: (event: React.DragEvent<HTMLDivElement>, column: string) => void;
-  addTask: (title: string, description: string, due_date?: string) => Promise<void>;
+  addTask: (title: string, description: string, due_date?: string, priority?: TaskPriority) => Promise<void>;
   editTask: (taskId: string, updates: UpdateTaskRequest) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   isLoading: boolean;
@@ -35,10 +35,25 @@ const getColumnColor = (title: string) => {
   }
 };
 
+const getPriorityColor = (priority: TaskPriority) => {
+  switch (priority) {
+    case 'Critical': return 'bg-red-600 text-red-100';
+    case 'High': return 'bg-orange-600 text-orange-100';
+    case 'Medium': return 'bg-yellow-600 text-yellow-100';
+    case 'Low': return 'bg-green-600 text-green-100';
+    default: return 'bg-gray-600 text-gray-100';
+  }
+};
+
 const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, onDrop, addTask, editTask, deleteTask, isLoading}) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ title: '', description: '', due_date: new Date().toISOString().split('T')[0] });
+  const [formData, setFormData] = useState({ 
+    title: '', 
+    description: '', 
+    due_date: new Date().toISOString().split('T')[0],
+    priority: 'Medium' as TaskPriority 
+  });
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     onDragOver(event);
@@ -61,8 +76,13 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
   const handleSaveTask = async () => {
     if (formData.title.trim() && formData.description.trim()) {
       try {
-        await addTask(formData.title.trim(), formData.description.trim(), formData.due_date);
-        setFormData({ title: '', description: '', due_date: new Date().toISOString().split('T')[0] });
+        await addTask(formData.title.trim(), formData.description.trim(), formData.due_date, formData.priority);
+        setFormData({ 
+          title: '', 
+          description: '', 
+          due_date: new Date().toISOString().split('T')[0],
+          priority: 'Medium' as TaskPriority 
+        });
         setShowForm(false);
       } catch (error) {
         // Error handling is managed by the parent component
@@ -72,11 +92,16 @@ const Column: React.FC<ColumnProps> = ({ title, tasks, onDragStart, onDragOver, 
   };
 
   const handleCancelTask = () => {
-    setFormData({ title: '', description: '', due_date: new Date().toISOString().split('T')[0] });
+    setFormData({ 
+      title: '', 
+      description: '', 
+      due_date: new Date().toISOString().split('T')[0],
+      priority: 'Medium' as TaskPriority 
+    });
     setShowForm(false);
   };
 
-  const handleFormChange = (field: 'title' | 'description' | 'due_date', value: string) => {
+  const handleFormChange = (field: 'title' | 'description' | 'due_date' | 'priority', value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -93,7 +118,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
   const [editData, setEditData] = useState({
     title: task.title,
     description: task.description,
-    due_date: task.due_date || new Date().toISOString().split('T')[0]
+    due_date: task.due_date || new Date().toISOString().split('T')[0],
+    priority: task.priority || 'Medium' as TaskPriority
   });
 
   const handleEdit = () => {
@@ -113,7 +139,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
     setEditData({
       title: task.title,
       description: task.description,
-      due_date: task.due_date || new Date().toISOString().split('T')[0]
+      due_date: task.due_date || new Date().toISOString().split('T')[0],
+      priority: task.priority || 'Medium' as TaskPriority
     });
     setIsEditing(false);
   };
@@ -175,6 +202,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
             text-gray-100
           "
         />
+        <select
+          value={editData.priority}
+          onChange={(e) => setEditData(prev => ({ ...prev, priority: e.target.value as TaskPriority }))}
+          className="
+            w-full px-3 py-2 text-sm
+            bg-gray-700 
+            border border-gray-500
+            rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            text-gray-100
+          "
+        >
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Critical">Critical</option>
+        </select>
         <div className="flex space-x-2">
           <button
             onClick={handleSaveEdit}
@@ -259,10 +302,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onDragStart, editTask, delete
         {task.description}
       </p>
       
-      {/* Task footer with due date */}
+      {/* Task footer with priority and due date */}
       <div className="flex items-center justify-between">
-        <div className="flex space-x-1">
-          {/* Placeholder for future tags */}
+        <div className="flex items-center space-x-2">
+          <span className={`text-xs px-2 py-1 rounded font-medium ${getPriorityColor(task.priority || 'Medium')}`}>
+            {task.priority || 'Medium'}
+          </span>
         </div>
         <div className="flex items-center space-x-2">
           {task.due_date && (
@@ -400,6 +445,24 @@ return (
                 "
               />
             </div>
+            <div>
+              <select
+                value={formData.priority}
+                onChange={(e) => handleFormChange('priority', e.target.value)}
+                className="
+                  w-full px-3 py-2 text-sm
+                  bg-gray-600 
+                  border border-gray-500
+                  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                  text-gray-100
+                "
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
             <div className="flex space-x-2">
               <button
                 onClick={handleSaveTask}
@@ -465,7 +528,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={(title, description, due_date) => addTaskWithData("todo", title, description, due_date)}
+            addTask={(title, description, due_date, priority) => addTaskWithData("todo", title, description, due_date, priority)}
             editTask={editTask}
             deleteTask={deleteTaskById}
             isLoading={isLoading}
@@ -476,7 +539,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={(title, description, due_date) => addTaskWithData("in_progress", title, description, due_date)}
+            addTask={(title, description, due_date, priority) => addTaskWithData("in_progress", title, description, due_date, priority)}
             editTask={editTask}
             deleteTask={deleteTaskById}
             isLoading={isLoading}
@@ -487,7 +550,7 @@ export default function ProjectsBoard() {
             onDragStart={onDragStart}
             onDragOver={onDragOver}
             onDrop={onDrop}
-            addTask={(title, description, due_date) => addTaskWithData("done", title, description, due_date)}
+            addTask={(title, description, due_date, priority) => addTaskWithData("done", title, description, due_date, priority)}
             editTask={editTask}
             deleteTask={deleteTaskById}
             isLoading={isLoading}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask, UpdateTaskRequest } from "@/lib/api/tasks";
+import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask, UpdateTaskRequest, TaskPriority } from "@/lib/api/tasks";
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
@@ -20,7 +20,7 @@ type AuthContextType = {
   logout: () => void;
   register: (email: string, password: string, company_name: string) => Promise<boolean>;
   addTask: (column: TaskStatus) => Promise<void>;
-  addTaskWithData: (column: TaskStatus, title: string, description: string, due_date?: string) => Promise<void>;
+  addTaskWithData: (column: TaskStatus, title: string, description: string, due_date?: string, priority?: TaskPriority) => Promise<void>;
   editTask: (taskId: string, updates: UpdateTaskRequest) => Promise<void>;
   deleteTaskById: (taskId: string) => Promise<void>;
   onDragStart: (event: React.DragEvent<HTMLDivElement>, taskId: string) => void;
@@ -64,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fall back to initial tasks for demo purposes
       setTasks({
         todo: [
-          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo", due_date: new Date().toISOString().split('T')[0] },
-          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo", due_date: new Date().toISOString().split('T')[0] },
+          { id: "1", title: "Task 1", description: "Description for Task 1", status: "todo", due_date: new Date().toISOString().split('T')[0], priority: "Medium" },
+          { id: "2", title: "Task 2", description: "Description for Task 2", status: "todo", due_date: new Date().toISOString().split('T')[0], priority: "High" },
         ],
         in_progress: [],
         done: [],
@@ -186,6 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description,
           status: column,
           due_date: new Date().toISOString().split('T')[0], // Default to today
+          priority: 'Medium' as TaskPriority, // Default priority
         };
 
         const newTask = await createTask(taskData, token, user.email);
@@ -204,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addTaskWithData = async (column: TaskStatus, title: string, description: string, due_date?: string) => {
+  const addTaskWithData = async (column: TaskStatus, title: string, description: string, due_date?: string, priority?: TaskPriority) => {
     if (title && description) {
       try {
         setIsLoading(true);
@@ -215,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description,
           status: column,
           due_date: due_date || new Date().toISOString().split('T')[0], // Default to today if not provided
+          priority: priority || 'Medium' as TaskPriority, // Default priority if not provided
         };
 
         // If user is logged in, create task via API
@@ -234,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             description,
             status: column,
             due_date: due_date || new Date().toISOString().split('T')[0],
+            priority: priority || 'Medium' as TaskPriority,
           };
           console.log("Task created locally:", localTask);
           // Update local state immediately for non-logged-in users
