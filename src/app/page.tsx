@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import ProjectsBoard from "@/components/board/projects-board";
-import { ProjectsBoardProvider } from "@/context/projects-board-context";
 import { useAuth } from "@/context/auth-context";
 
 // function BoardLink() {
@@ -92,9 +91,7 @@ export default function Home() {
             )}
           </div>
         </header>
-        <ProjectsBoardProvider>
-          <ProjectsBoard />
-        </ProjectsBoardProvider>
+        <ProjectsBoard />
       </div>
     </main>
   );

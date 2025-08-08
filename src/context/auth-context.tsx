@@ -205,7 +205,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const addTaskWithData = async (column: TaskStatus, title: string, description: string, due_date?: string) => {
-    if (title && description && user && token) {
+    if (title && description) {
       try {
         setIsLoading(true);
         setError(null);
@@ -217,13 +217,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           due_date: due_date || new Date().toISOString().split('T')[0], // Default to today if not provided
         };
 
-        const newTask = await createTask(taskData, token, user.email);
-        console.log("Task created:", newTask);
-        // Update local state only after successful API response
-        setTasks((prev) => ({
-          ...prev,
-          [column]: [...prev[column], newTask],
-        }));
+        // If user is logged in, create task via API
+        if (user && token) {
+          const newTask = await createTask(taskData, token, user.email);
+          console.log("Task created via API:", newTask);
+          // Update local state only after successful API response
+          setTasks((prev) => ({
+            ...prev,
+            [column]: [...prev[column], newTask],
+          }));
+        } else {
+          // If user is not logged in, create task locally
+          const localTask: Task = {
+            id: `local-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique local ID
+            title,
+            description,
+            status: column,
+            due_date: due_date || new Date().toISOString().split('T')[0],
+          };
+          console.log("Task created locally:", localTask);
+          // Update local state immediately for non-logged-in users
+          setTasks((prev) => ({
+            ...prev,
+            [column]: [...prev[column], localTask],
+          }));
+        }
       } catch (err) {
         console.error('Failed to create task:', err);
         setError('Failed to create task. Please try again.');
@@ -235,30 +253,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const editTask = async (taskId: string, updates: UpdateTaskRequest) => {
-    if (!user || !token) return;
-
     try {
       setIsLoading(true);
       setError(null);
 
-      const updatedTask = await updateTask(taskId, updates, token, user.email);
-      console.log("Task updated:", updatedTask);
+      // If user is logged in and task is not a local task, update via API
+      if (user && token && !taskId.startsWith('local-')) {
+        const updatedTask = await updateTask(taskId, updates, token, user.email);
+        console.log("Task updated via API:", updatedTask);
 
-      // Update local state
-      setTasks((prev) => {
-        const newTasks = { ...prev };
-        
-        // Find the task in all columns and update it
-        Object.keys(newTasks).forEach((column) => {
-          const columnKey = column as keyof typeof newTasks;
-          const taskIndex = newTasks[columnKey].findIndex(task => task.id === taskId);
-          if (taskIndex !== -1) {
-            newTasks[columnKey][taskIndex] = updatedTask;
-          }
+        // Update local state
+        setTasks((prev) => {
+          const newTasks = { ...prev };
+          
+          // Find the task in all columns and update it
+          Object.keys(newTasks).forEach((column) => {
+            const columnKey = column as keyof typeof newTasks;
+            const taskIndex = newTasks[columnKey].findIndex(task => task.id === taskId);
+            if (taskIndex !== -1) {
+              newTasks[columnKey][taskIndex] = updatedTask;
+            }
+          });
+
+          return newTasks;
         });
+      } else {
+        // Handle local task update (for non-logged-in users or local tasks)
+        console.log("Task updated locally:", taskId, updates);
+        setTasks((prev) => {
+          const newTasks = { ...prev };
+          
+          // Find the task in all columns and update it locally
+          Object.keys(newTasks).forEach((column) => {
+            const columnKey = column as keyof typeof newTasks;
+            const taskIndex = newTasks[columnKey].findIndex(task => task.id === taskId);
+            if (taskIndex !== -1) {
+              newTasks[columnKey][taskIndex] = {
+                ...newTasks[columnKey][taskIndex],
+                ...updates,
+              };
+            }
+          });
 
-        return newTasks;
-      });
+          return newTasks;
+        });
+      }
     } catch (err) {
       console.error('Failed to update task:', err);
       setError('Failed to update task. Please try again.');
@@ -269,16 +308,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteTaskById = async (taskId: string) => {
-    if (!user || !token) return;
-
     try {
       setIsLoading(true);
       setError(null);
 
-      await deleteTask(taskId, token, user.email);
-      console.log("Task deleted:", taskId);
+      // If user is logged in and task is not a local task, delete via API
+      if (user && token && !taskId.startsWith('local-')) {
+        await deleteTask(taskId, token, user.email);
+        console.log("Task deleted via API:", taskId);
+      } else {
+        // Handle local task deletion (for non-logged-in users or local tasks)
+        console.log("Task deleted locally:", taskId);
+      }
 
-      // Update local state
+      // Update local state (same logic for both API and local tasks)
       setTasks((prev) => {
         const newTasks = { ...prev };
         
@@ -314,7 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sourceColumn = event.dataTransfer.getData("sourceColumn");
     console.log('in onDrop', { taskId, sourceColumn, targetColumn });
 
-    if (!taskId || !sourceColumn || !user || !token) return;
+    if (!taskId || !sourceColumn) return;
 
     // If the source and target columns are the same, do nothing
     if (sourceColumn === targetColumn) return;
@@ -324,24 +367,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       const taskIdNumber = Number(taskId); 
-      const task = tasks[sourceColumn as keyof typeof tasks].find((t) => Number(t.id) === taskIdNumber);
+      const task = tasks[sourceColumn as keyof typeof tasks].find((t) => 
+        Number(t.id) === taskIdNumber || t.id === taskId
+      );
 
       if (!task) {
         console.error(`Task with ID ${taskId} not found`);
         return;
       }
-      // Update task status via API
-      await updateTask(
-        taskId,
-        {
-          status: targetColumn as TaskStatus, // Pass the updated column status
-        },
-        token,
-        user.email
-      );
-      console.log("Task moved successfully:", { taskId, sourceColumn, targetColumn });
+
+      // If user is logged in and task is not a local task, update via API
+      if (user && token && !taskId.startsWith('local-')) {
+        // Update task status via API
+        await updateTask(
+          taskId,
+          {
+            status: targetColumn as TaskStatus, // Pass the updated column status
+          },
+          token,
+          user.email
+        );
+        console.log("Task moved via API:", { taskId, sourceColumn, targetColumn });
+      } else {
+        // Handle local task movement (for non-logged-in users or local tasks)
+        console.log("Task moved locally:", { taskId, sourceColumn, targetColumn });
+      }
             
-      // Update local state only after successful API response
+      // Update local state (same logic for both API and local tasks)
       setTasks((prev) => {
         const sourceTasks = [...prev[sourceColumn as keyof typeof tasks]];
         const targetTasks = [...prev[targetColumn as keyof typeof tasks]];
