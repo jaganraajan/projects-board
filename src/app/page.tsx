@@ -22,16 +22,16 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-900">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header with Login and Register Buttons */}
         <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-100">
             Project Management Board
             {user?.company_name && (
               <a
                 href={`https://${user.company_name.trim().toLowerCase().replace(/\s+/g, '-')}.projects-board-zeta.vercel.app`}
-                className="text-blue-500 underline ml-2 text-lg"
+                className="text-blue-400 underline ml-2 text-lg hover:text-blue-300"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -43,7 +43,7 @@ export default function Home() {
             {user ? (
               <button 
                 onClick={handleSignOut} 
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium"
               >
                 Sign Out
               </button>
@@ -51,13 +51,13 @@ export default function Home() {
               <>
                 <button 
                   onClick={navigateToLogin} 
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium"
                 >
                   Login
                 </button>
                 <button 
                   onClick={navigateToRegister} 
-                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 font-medium"
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 font-medium"
                 >
                   Register
                 </button>

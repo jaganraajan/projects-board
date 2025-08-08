@@ -37,44 +37,44 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      <h2 className="text-2xl font-bold mb-4">Register</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
+      <h2 className="text-2xl font-bold mb-4 text-gray-100">Register</h2>
       <form
         onSubmit={handleRegister}
-        className="w-80 bg-white p-6 rounded shadow-md"
+        className="w-80 bg-gray-800 p-6 rounded shadow-md border border-gray-700"
       >
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Company Name</label>
+          <label className="block text-sm font-medium mb-2 text-gray-200">Company Name</label>
           <input
             type="text"
             name="company_name"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100 placeholder-gray-400"
             placeholder="Your company name"
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Email</label>
+          <label className="block text-sm font-medium mb-2 text-gray-200">Email</label>
           <input
             type="email"
             name="email"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100 placeholder-gray-400"
             placeholder="Enter your email"
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Password</label>
+          <label className="block text-sm font-medium mb-2 text-gray-200">Password</label>
           <input
             type="password"
             name="password"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-700 text-gray-100 placeholder-gray-400"
             placeholder="Enter your password"
           />
         </div>
         <button
           type="submit"
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200"
           disabled={loading}
         >
           {loading ? "Registering..." : "Register"}
@@ -82,7 +82,7 @@ export default function RegisterPage() {
         <button
           type="button"
           onClick={navigateBack}
-          className="w-full mt-4 px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+          className="w-full mt-4 px-4 py-2 bg-gray-600 text-gray-100 rounded hover:bg-gray-700 transition-colors duration-200"
         >
           Back
         </button>
