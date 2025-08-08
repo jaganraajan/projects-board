@@ -1,4 +1,5 @@
 export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
 export type Task = {
   id: string;
@@ -6,6 +7,7 @@ export type Task = {
   description: string;
   status: TaskStatus;
   due_date: string;
+  priority: TaskPriority;
 };
 
 export type CreateTaskRequest = {
@@ -13,6 +15,7 @@ export type CreateTaskRequest = {
   description: string;
   status: TaskStatus;
   due_date: string;
+  priority: TaskPriority;
 };
 
 export type UpdateTaskRequest = {
@@ -20,6 +23,7 @@ export type UpdateTaskRequest = {
   description?: string;
   status?: TaskStatus;
   due_date?: string;
+  priority?: TaskPriority;
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL || 'http://localhost:3001';
