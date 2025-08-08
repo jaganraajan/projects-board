@@ -5,31 +5,31 @@ import ProjectsBoard from "@/components/board/projects-board";
 import { ProjectsBoardProvider } from "@/context/projects-board-context";
 import { useAuth } from "@/context/auth-context";
 
-function BoardLink() {
-  const { user } = useAuth();
-  if (!user?.company_name) return null;
-  // Sanitize company name for subdomain: lowercase, remove spaces, etc.
-  const sub = user.company_name.trim().toLowerCase().replace(/\s+/g, '-');
-  const url = `https://${sub}.projects-board-zeta.vercel.app`;
-  return (
-    <div className="my-6 p-4 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-      <div className="flex items-center space-x-2">
-        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-        <span className="font-medium text-blue-900 dark:text-blue-100">Your Board URL:</span>
-      </div>
-      <a 
-        href={url} 
-        className="text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 underline break-all text-sm mt-1 block transition-colors duration-200" 
-        target="_blank" 
-        rel="noopener noreferrer"
-      >
-        {url}
-      </a>
-    </div>
-  );
-}
+// function BoardLink() {
+//   const { user } = useAuth();
+//   if (!user?.company_name) return null;
+//   // Sanitize company name for subdomain: lowercase, remove spaces, etc.
+//   const sub = user.company_name.trim().toLowerCase().replace(/\s+/g, '-');
+//   const url = `https://${sub}.projects-board-zeta.vercel.app`;
+//   return (
+//     <div className="my-6 p-4 border border-blue-200 dark:border-blue-800 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+//       <div className="flex items-center space-x-2">
+//         <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+//         </svg>
+//         <span className="font-medium text-blue-900 dark:text-blue-100">Your Board URL:</span>
+//       </div>
+//       <a 
+//         href={url} 
+//         className="text-blue-700 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-200 underline break-all text-sm mt-1 block transition-colors duration-200" 
+//         target="_blank" 
+//         rel="noopener noreferrer"
+//       >
+//         {url}
+//       </a>
+//     </div>
+//   );
+// }
 
 export default function Home() {
   const router = useRouter();
