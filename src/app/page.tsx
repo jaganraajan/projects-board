@@ -42,22 +42,22 @@ export default function Home() {
           <div className="flex gap-3">
             {user ? (
               <button 
-                onClick={handleSignOut} 
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium"
-              >
-                Sign Out
-              </button>
+              onClick={handleSignOut} 
+              className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg shadow-md transition-all duration-200 font-medium"
+            >
+              Sign Out
+            </button>
             ) : (
               <>
                 <button 
                   onClick={navigateToLogin} 
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg shadow-md transition-all duration-200 font-medium"
                 >
                   Login
                 </button>
                 <button 
                   onClick={navigateToRegister} 
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 font-medium"
+                  className="px-4 py-2 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white rounded-lg shadow-md transition-all duration-200 font-medium"
                 >
                   Register
                 </button>

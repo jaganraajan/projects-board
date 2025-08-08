@@ -1,6 +1,6 @@
 'use client';
 
-export function FilterBar() {
+export function ProjectDetailsBar() {
   return (
     <div className="flex items-center justify-between p-4 mb-6 bg-gray-800 rounded-lg shadow-sm border border-gray-700">
       <div className="flex items-center space-x-3">

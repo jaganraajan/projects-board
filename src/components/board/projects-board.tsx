@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/auth-context";
 import React, { useState } from "react";
-import { FilterBar } from "./filter-bar";
+import { ProjectDetailsBar } from "./project-details-bar";
 import { Task, UpdateTaskRequest } from "@/lib/api/tasks";
 
 type ColumnProps = {
@@ -443,7 +443,7 @@ export default function ProjectsBoard() {
 
   return (
     <div className="h-full">
-      <FilterBar />
+      <ProjectDetailsBar />
       
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
