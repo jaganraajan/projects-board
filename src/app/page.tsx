@@ -92,7 +92,6 @@ export default function Home() {
             )}
           </div>
         </header>
-        <BoardLink />
         <ProjectsBoardProvider>
           <ProjectsBoard />
         </ProjectsBoardProvider>

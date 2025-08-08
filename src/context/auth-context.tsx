@@ -79,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem("token");
 
     if (storedToken) {
-        console.log("Token found in localStorage:", storedToken);
       setToken(storedToken);
 
       // Fetch user details using the token
@@ -302,7 +301,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const onDragStart = (event: React.DragEvent<HTMLDivElement>, taskId: string) => {
     const sourceColumn = event.currentTarget.closest("[data-column]")?.getAttribute("data-column");
-    console.log("Dragging task:", { taskId, sourceColumn }); // Debugging
     event.dataTransfer.setData("taskId", taskId);
     event.dataTransfer.setData("sourceColumn", sourceColumn || "");
   };
@@ -361,7 +359,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           [targetColumn]: targetTasks,
         };
       
-        console.log("Updated tasks:", updatedTasks); // Debugging
         return updatedTasks;
       });
     } catch (err) {

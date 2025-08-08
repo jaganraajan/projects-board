@@ -59,10 +59,6 @@ export async function updateTask(taskId: string, updates: UpdateTaskRequest, tok
     throw new Error('API URL not configured');
   }
   
-
-  console.log("Updates object:", updates);
-  console.log("token:", token);
-  
   const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
     method: 'PATCH',
     headers: {
