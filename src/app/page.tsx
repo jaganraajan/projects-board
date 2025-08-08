@@ -48,11 +48,11 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <main className="min-h-screen bg-white dark:bg-gray-950">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header with Login and Register Buttons */}
-        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Project Management Board
             {user?.company_name && (
               <a
