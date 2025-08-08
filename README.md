@@ -40,6 +40,7 @@ A full-stack Kanban-style project management board built with [Next.js](https://
 ### Backend
 
 - The backend Rails API is hosted on Render. See `/api` endpoints in your frontend code for integration.
+- The backend source code is available at [https://github.com/jaganraajan/projects-board-tenant-server](https://github.com/jaganraajan/projects-board-tenant-server).
 - To run locally, clone the backend repo, install dependencies, and start the Rails server.
 
 ## Configuration

@@ -35,7 +35,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                ({user.company_name})
+                ({user.company_name ? user.company_name : user.email})
               </a>
             )}
           </h1>
