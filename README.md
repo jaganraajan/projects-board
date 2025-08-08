@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Projects Board
+
+A full-stack Kanban-style project management board built with [Next.js](https://nextjs.org) and a [Ruby on Rails](https://rubyonrails.org) backend.
+
+## Features
+
+- User authentication and multi-tenant support
+- Create, edit, move, and delete tasks across columns (Todo, In Progress, Done)
+- Responsive UI with light/dark mode support
+- Due dates and company branding
+- Backend API for tasks and users
+
+## Tech Stack
+
+- **Frontend:** Next.js (React, TypeScript, Tailwind CSS)
+- **Backend:** Ruby on Rails (API mode), hosted on [Render](https://render.com)
+- **Authentication:** JWT-based, multi-tenant
+- **Deployment:** Vercel (frontend), Render (backend)
 
 ## Getting Started
 
-First, run the development server:
+### Frontend
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install dependencies:
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Backend
 
-## Learn More
+- The backend Rails API is hosted on Render. See `/api` endpoints in your frontend code for integration.
+- To run locally, clone the backend repo, install dependencies, and start the Rails server.
 
-To learn more about Next.js, take a look at the following resources:
+## Configuration
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- API endpoint is set via `NEXT_PUBLIC_TENANT_SERVER_API_URL` in your `.env.local` file.
+- Update authentication and company settings in `auth-context.tsx`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Editing
 
-## Deploy on Vercel
+- Edit the main page in `app/page.tsx`. The page auto-updates as you edit.
+- UI components are in [board](http://_vscodecontentref_/0).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Fonts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font).
+
+## License
+
+MIT
