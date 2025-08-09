@@ -28,6 +28,20 @@ export type UpdateTaskRequest = {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_TENANT_SERVER_API_URL || 'http://localhost:3001';
 
+const backendToFrontendPriority: Record<string, string> = {
+  "Priority 1": "Critical",
+  "Priority 2": "High",
+  "Priority 3": "Medium",
+  "Priority 4": "Low",
+};
+
+export function normalizeTaskPriority(task: Task): Task {
+  return {
+    ...task,
+    priority: (backendToFrontendPriority[task.priority] as TaskPriority) || task.priority,
+  };
+}
+
 /**
  * Create a new task via API
  */
@@ -36,6 +50,15 @@ export async function createTask(taskData: CreateTaskRequest, token: string, ema
     throw new Error('API URL not configured');
   }
   
+  // Map frontend priority to backend priority
+  let mappedPriority: string = taskData.priority;
+  if (mappedPriority === "Low") mappedPriority = "Priority 4";
+  if (mappedPriority === "Critical") mappedPriority = "Priority 1";
+  if (mappedPriority === "High") mappedPriority = "Priority 2";
+  if (mappedPriority === "Medium") mappedPriority = "Priority 3";
+
+  const payload = { ...taskData, priority: mappedPriority };
+
   const response = await fetch(`${API_BASE_URL}/tasks`, {
     method: 'POST',
     headers: {
@@ -44,7 +67,7 @@ export async function createTask(taskData: CreateTaskRequest, token: string, ema
       'X-User-Email': email, // Include the user's email
     },
     body: JSON.stringify({
-      task: taskData
+      task: payload
     }),
   });
 

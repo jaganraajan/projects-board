@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
-import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask, UpdateTaskRequest, TaskPriority } from "@/lib/api/tasks";
+import { Task, TaskStatus, createTask, updateTask, fetchTasks, deleteTask, UpdateTaskRequest, TaskPriority, normalizeTaskPriority } from "@/lib/api/tasks";
 
 type AuthContextType = {
   user: { email: string; company_name: string } | null;
@@ -190,7 +190,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         const newTask = await createTask(taskData, token, user.email);
-        console.log("Task created:", newTask);
+        const normalizedTask = normalizeTaskPriority(newTask);
+        console.log("Task created:", normalizedTask);
+        
         // Update local state only after successful API response
         setTasks((prev) => ({
           ...prev,
@@ -222,11 +224,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // If user is logged in, create task via API
         if (user && token) {
           const newTask = await createTask(taskData, token, user.email);
-          console.log("Task created via API:", newTask);
+
+          const normalizedNewTask = normalizeTaskPriority(newTask);
+        
+          console.log("Task created via API:", normalizedNewTask);
           // Update local state only after successful API response
           setTasks((prev) => ({
             ...prev,
-            [column]: [...prev[column], newTask],
+            [column]: [...prev[column], normalizedNewTask],
           }));
         } else {
           // If user is not logged in, create task locally
@@ -261,7 +266,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       // If user is logged in and task is not a local task, update via API
-      if (user && token && !taskId.startsWith('local-')) {
+      if (user && token && !String(taskId).startsWith('local-')) {
         const updatedTask = await updateTask(taskId, updates, token, user.email);
         console.log("Task updated via API:", updatedTask);
 
