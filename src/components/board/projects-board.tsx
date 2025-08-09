@@ -445,24 +445,6 @@ return (
                 "
               />
             </div>
-            <div>
-              <select
-                value={formData.priority}
-                onChange={(e) => handleFormChange('priority', e.target.value)}
-                className="
-                  w-full px-3 py-2 text-sm
-                  bg-gray-600 
-                  border border-gray-500
-                  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                  text-gray-100
-                "
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
-            </div>
             <div className="flex space-x-2">
               <button
                 onClick={handleSaveTask}
