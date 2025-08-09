@@ -321,7 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
 
       // If user is logged in and task is not a local task, delete via API
-      if (user && token && !taskId.startsWith('local-')) {
+      if (user && token && !String(taskId).startsWith('local-')) {
         await deleteTask(taskId, token, user.email);
         console.log("Task deleted via API:", taskId);
       } else {
@@ -385,7 +385,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // If user is logged in and task is not a local task, update via API
-      if (user && token && !taskId.startsWith('local-')) {
+      if (user && token && !String(taskId).startsWith('local-')) {
         // Update task status via API
         await updateTask(
           taskId,
